@@ -39,6 +39,15 @@ def set_coords(input):
     Coord.max_x = max(X.x for X in coord_arr)
     Coord.max_y = max(Y.y for Y in coord_arr)
 
+def draw_grid():
+    pushMatrix()
+    # stroke(255, 50)
+    # noFill()
+    for i in range(0, height):
+        for j in range(0, width):
+            rect(i*100, j*100, 100, 100)
+    popMatrix()
+
 def draw_box():
     cols = Coord.max_x/scl
     rows = Coord.max_y/scl
@@ -55,26 +64,17 @@ def draw_surface():
     cols = Coord.max_x/scl
     rows = Coord.max_y/scl
 
-    translate(width/2 - cols/2, height/2 - rows/2, 0)
+    translate(width/2 - cols/2, height/2 - rows/3, 0)
     rotateX(PI/3)
     for y in range(rows/20):
         beginShape(TRIANGLE_STRIP)
-        for x in range(cols/18):
+        for x in range(cols/19):
             stroke(255, 75)
             fill(0, 0, 250, 60)
             # this sets the vertex points for the triangles on the surface, i.e. the density
             vertex(x*20, y*20)
             vertex(x*20, (y+1)*20)
         endShape()
-
-def draw_grid():
-    pushMatrix()
-    # stroke(255, 50)
-    # noFill()
-    for i in range(0, height):
-        for j in range(0, width):
-            rect(i*100, j*100, 100, 100)
-    popMatrix()
 
 class Coord(object):
     def __init__(self, tempX, tempY, tempZ):
