@@ -8,18 +8,24 @@
 scl = 30
 
 def setup():
-    frameRate(4)
+    frameRate(30)
     size(1000, 1000, P3D)
     input = take_input()
     set_coords(input)
+
 
 def draw():
     background(0)
     stroke(255)
     noFill()
     #draw grid for reference
-    draw_grid()
-    #draw 3D box
+    # draw_grid()
+    translate(width/2, height/2)
+    rotateX(Coord.i % 2*PI)
+    # rotateY(Coord.i % 2*PI)
+    # rotateZ(Coord.i % PI/2)
+    if keyPressed is True:
+        Coord.i += PI/256
     draw_box()
     draw_surface()
 
@@ -55,8 +61,6 @@ def draw_box():
     stroke(255, 140, 0)
     fill(255, 165, 0, 80)
     pushMatrix()
-    translate(width/2, height/2)
-    rotateX(PI/3)
     box(cols, rows, rows/3)
     popMatrix()
 
@@ -64,8 +68,7 @@ def draw_surface():
     cols = Coord.max_x/scl
     rows = Coord.max_y/scl
 
-    translate(width/2 - cols/2, height/2 - rows/3, 0)
-    rotateX(PI/3)
+    translate(-cols/2, -rows/2, 57) #hard coded, no idea how to bind.
     for y in range(rows/20):
         beginShape(TRIANGLE_STRIP)
         for x in range(cols/19):
@@ -77,6 +80,9 @@ def draw_surface():
         endShape()
 
 class Coord(object):
+    
+    i = 0
+    
     def __init__(self, tempX, tempY, tempZ):
         self.x = int(tempX)
         self.y = int(tempY)
@@ -94,4 +100,3 @@ class Coord(object):
        
 
         
-
