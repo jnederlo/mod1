@@ -12,7 +12,9 @@ def setup():
     size(1000, 1000, P3D)
     input = take_input()
     set_coords(input)
-
+    
+    print(Coord.max_x)
+    print(Coord.max_y)
 
 def draw():
     background(0)
@@ -20,14 +22,31 @@ def draw():
     noFill()
     #draw grid for reference
     # draw_grid()
-    translate(width/2, height/2)
+    # camera(width/2, height*2, (height/2.0) / tan(PI*30.0 / 180.0), width/2.0, height/2.0, 0, 0, 1, 0)
+    translate(width/2, height/2 + 100)
     rotateX(Coord.i % 2*PI)
-    # rotateY(Coord.i % 2*PI)
+    rotateY(Coord.j % 2*PI)
     # rotateZ(Coord.i % PI/2)
+    pushMatrix()
     if keyPressed is True:
-        Coord.i += PI/256
+        if key == CODED:
+            if keyCode == UP:
+                Coord.i += PI/256
+            elif keyCode == DOWN:
+                Coord.i -= PI/256
+            elif keyCode == LEFT:
+                Coord.j -= PI/256
+            elif keyCode == RIGHT:
+                Coord.j += PI/256
+        elif key == 'r' or 'R':
+            resetMatrix()
     draw_box()
     draw_surface()
+    popMatrix()
+
+
+    
+    
 
 def take_input():
     input = open("demo1.mod1").read()
@@ -55,25 +74,19 @@ def draw_grid():
     popMatrix()
 
 def draw_box():
-    cols = Coord.max_x/scl
-    rows = Coord.max_y/scl
-    
-    stroke(255, 140, 0)
-    fill(255, 165, 0, 80)
+    stroke(0, 140, 0)
+    fill(0, 165, 0, 80)
     pushMatrix()
-    box(cols, rows, rows/3)
+    box(Coord.x, Coord.y, Coord.z)
     popMatrix()
 
 def draw_surface():
-    cols = Coord.max_x/scl
-    rows = Coord.max_y/scl
-
-    translate(-cols/2, -rows/2, 57) #hard coded, no idea how to bind.
-    for y in range(rows/20):
+    translate((Coord.x / -2), (Coord.y / -2), (Coord.z / 2))
+    for y in range(height/50):
         beginShape(TRIANGLE_STRIP)
-        for x in range(cols/19):
+        for x in range(width/50 + 1):
             stroke(255, 75)
-            fill(0, 0, 250, 60)
+            fill(0, 165, 0, 80)
             # this sets the vertex points for the triangles on the surface, i.e. the density
             vertex(x*20, y*20)
             vertex(x*20, (y+1)*20)
@@ -82,6 +95,10 @@ def draw_surface():
 class Coord(object):
     
     i = 0
+    j = 0
+    x = 400
+    y = 400
+    z = 150
     
     def __init__(self, tempX, tempY, tempZ):
         self.x = int(tempX)
