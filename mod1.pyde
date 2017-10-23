@@ -14,30 +14,65 @@ row = 400
 depth = 40
 
 terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
+smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 z_value = [0 for x in range(col)]
+
+def set_smooth_terrain():
+    for y in range(0, row, 10):
+        print "fuck"
+        for x in range(0, col, 10):
+            adjacent_sec = 0
+            section_tot = 0.0
+            if ((x/scl) - 1) > 0:
+                section_tot += terrain_copy[((x-1)/scl)][(y/scl)]
+                adjacent_sec += 1
+                if ((y/scl) - 1) > 0:
+                    section_tot += terrain_copy[((x-1)/scl)][((y-1)/scl)]
+                    adjacent_sec += 1
+                if ((y/scl) + 1) < row:
+                    section_tot += terrain_copy[((x-1)/scl)][((y+1)/scl)]
+                    adjacent_sec += 1
+            # print "adjacent_sec = ", adjacent_sec
+            # print "section_tot = ", section_tot
+            if ((x/scl) + 1) < col:
+                section_tot += terrain_copy[((x+1)/scl)][(y/scl)]
+                adjacent_sec += 1
+                if ((y/scl) - 1) > 0:
+                    section_tot += terrain_copy[((x+1)/scl)][((y-1)/scl)]
+                    adjacent_sec += 1
+                if ((y/scl) + 1) < row:
+                    section_tot += terrain_copy[((x+1)/scl)][((y+1)/scl)]
+                    adjacent_sec += 1
+            if ((y/scl) - 1) > 0:
+                section_tot += terrain_copy[(x/scl)][((y-1)/scl)]
+                adjacent_sec += 1
+            if ((y/scl) + 1) < row:
+                section_tot += terrain_copy[(x/scl)][((y+1)/scl)]
+                adjacent_sec += 1
+            print "adjacent_sec = ", adjacent_sec
+            print "section_tot = ", section_tot
+            smooth_terrain[(x/scl)][(y/scl)] = terrain_copy[(x/scl)][(y/scl)] + section_tot // adjacent_sec * .5
+    return smooth_terrain
 
 def set_terrain(coord_arr):
     # Coord.num_coords = 0
     for i in range(len(coord_arr)):
         terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)] = int(coord_arr[i].z)
         # print terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)]
-    # for y in range(0, row, 10):
-    #     for x in range(0, col, 10):
-    #         for i in range(len(coord_arr) - 1):
-    #                 terrain[(x/scl)][(y/scl)] = 0
-    #             Coord.num_coords += 1
-    #         # print terrain[(x/scl)][(y/scl)]
-
+    global terrain_copy
+    terrain_copy = terrain
+    for i in range(0, 6):
+        terrain_copy = set_smooth_terrain()
 
 # function to scale the input to fit the shape.
 def scale_input(coord_arr):
     scale_factor = max(Coord.max_x, Coord.max_y, Coord.max_z) * 1.25 # I'm scaling above the max_coord by 1.25 to get the points off the edge.
     print("SCALED COORDS")
     for i in range(Coord.num_coords):
-        coord_arr[i].x = map(coord_arr[i].x, 0, scale_factor, 0, col)
-        coord_arr[i].y = map(coord_arr[i].y, 0, scale_factor, 0, row)
-        coord_arr[i].z = map(coord_arr[i].z, 0, scale_factor, 0, row)
-        print round(coord_arr[i].x, 5), "\t", round(coord_arr[i].y, 5), "\t", round(coord_arr[i].z, 5)
+        coord_arr[i].x = round(map(coord_arr[i].x, 0, scale_factor, 0, col), -1)
+        coord_arr[i].y = round(map(coord_arr[i].y, 0, scale_factor, 0, row), -1)
+        coord_arr[i].z = round(map(coord_arr[i].z, 0, scale_factor, 0, row), -1)
+        print coord_arr[i].x, "\t", coord_arr[i].y, "\t", coord_arr[i].z
     return(coord_arr)
 
 def setup():
@@ -63,15 +98,14 @@ def draw_surface():
         for x in range(col/scl + 1):
             stroke(255, 75)
             fill(0, 0, 265, 80)
-            vertex(x*scl, y*scl, terrain[x][y])
-            vertex(x*scl, (y+1)*scl, terrain[x][y+1])
+            vertex(x*scl, y*scl, terrain_copy[x][y])
+            vertex(x*scl, (y+1)*scl, terrain_copy[x][y+1])
         endShape()
 
 def draw():
     background(0)
     stroke(255)
     noFill()
-
     #draw grid for reference
     # draw_grid()
     change_view()
@@ -82,7 +116,7 @@ def draw():
     draw_surface()
 
 def take_input():
-    input = open("demo3.mod1").read()
+    input = open("demo4.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
