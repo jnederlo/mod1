@@ -1,18 +1,33 @@
 
 
+
+
 ############### THIS IS HOW YOU MAKE QUICK STRUCT LIKE ELEMENTS OUT OF TUPLES##########
 #from collections import namedtuple
 
 # myStruct = namedtuple("MyStruct", "max_x, max_y")
 
-scl = 5
+scl = 10
 
 col = 400
 row = 400
 depth = 40
 
-terrain = [[0 for x in range(col)] for y in range(row)]
+terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 z_value = [0 for x in range(col)]
+
+def set_terrain(coord_arr):
+    # Coord.num_coords = 0
+    for i in range(len(coord_arr)):
+        terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)] = int(coord_arr[i].z)
+        # print terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)]
+    # for y in range(0, row, 10):
+    #     for x in range(0, col, 10):
+    #         for i in range(len(coord_arr) - 1):
+    #                 terrain[(x/scl)][(y/scl)] = 0
+    #             Coord.num_coords += 1
+    #         # print terrain[(x/scl)][(y/scl)]
+
 
 # function to scale the input to fit the shape.
 def scale_input(coord_arr):
@@ -32,13 +47,14 @@ def setup():
     global coord_arr # make coord_array global so I can access in draw()
     coord_arr = set_coords(input)
     coord_arr = scale_input(coord_arr)
+    set_terrain(coord_arr)
     yOffset = 0
-    for y in range(3, row/scl - 2):
-        xOffset = 0
-        for x in range(3, col/scl - 2):
-            terrain[x][y] = map(noise(xOffset, yOffset), 0, 1, 0, 30)
-            xOffset += 0.08
-        yOffset += 0.08
+    # for y in range(3, row/scl - 2):
+    #     xOffset = 0
+    #     for x in range(3, col/scl - 2):
+    #         terrain[x][y] = map(noise(xOffset, yOffset), 0, 1, 0, 30)
+    #         xOffset += 0.08
+    #     yOffset += 0.08
 
 def draw_surface():
     translate((col / -2), (row / -2), (depth / 2))
@@ -47,19 +63,8 @@ def draw_surface():
         for x in range(col/scl + 1):
             stroke(255, 75)
             fill(0, 0, 265, 80)
-            # this sets the vertex points for the triangles on the surface, i.e. the density
-            # vertex(x*scl, y*scl, 100)
-            # vertex(x*scl, (y+1)*scl, 100)
-            for i in range(Coord.num_coords):
-                if (x*scl == (coord_arr[i].x) and y*scl == (coord_arr[i].y)):
-                    # print x*scl, y*scl
-                    # print("Passed = ", coord_arr[i].x, coord_arr[i].y, coord_arr[i].z)
-                    vertex(x*scl, y*scl, coord_arr[i].z)
-                else:
-                    # vertex(x*scl, y*scl, terrain[x][y])
-                    # vertex(x*scl, (y+1)*scl, terrain[x][y+1])
-                    vertex(x*scl, y*scl, 0)
-                    vertex(x*scl, (y+1)*scl, 0)
+            vertex(x*scl, y*scl, terrain[x][y])
+            vertex(x*scl, (y+1)*scl, terrain[x][y+1])
         endShape()
 
 def draw():
@@ -193,9 +198,9 @@ class Coord(object):
         self.z = int(tempZ)
         
     def max_coord(self, max_x, max_y, max_z):
-        self.max_x = max_x
-        self.max_y = max_y
-        self.max_z = max_z
+        self.max_x = int(max_x)
+        self.max_y = int(max_y)
+        self.max_z = int(max_z)
         
     # def cols(self, max_x):
     #     self.cols = max_x/scl
