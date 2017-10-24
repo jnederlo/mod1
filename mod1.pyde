@@ -99,7 +99,7 @@ def draw():
     draw_surface()
 
 def take_input():
-    input = open("demo1.mod1").read()
+    input = open("demo5.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
