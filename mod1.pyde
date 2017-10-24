@@ -99,9 +99,17 @@ def draw_surface():
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
         for x in range(col/scl + 1):
-            stroke(255, 75)
-            fill(0, 0, 265, 80)
+            stroke(45, 80)
+            noStroke()
+            color_red = map(smooth_terrain[x][y], 0, 50, 30, 225)
+            color_green = map(smooth_terrain[x][y], 0, 50, 100, 160)
+            color_blue = map(smooth_terrain[x][y], 0, 50, 30, 90)
+            fill(color_red, color_green, color_blue)
             vertex(x*scl, y*scl, smooth_terrain[x][y])
+            color_red = map(smooth_terrain[x][y+1], 0, 50, 30, 225)
+            color_green = map(smooth_terrain[x][y+1], 0, 50, 100, 160)
+            color_blue = map(smooth_terrain[x][y+1], 0, 50, 30, 90)
+            fill(color_red, color_green, color_blue)
             vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1])
         endShape()
 
