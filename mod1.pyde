@@ -94,6 +94,15 @@ def setup():
     coord_arr = scale_input(coord_arr)
     set_terrain(coord_arr)
 
+def color_red(x, y):
+    return map(smooth_terrain[x][y], 0, 50, 30, 225)
+
+def color_green(x, y):
+    return map(smooth_terrain[x][y], 0, 50, 100, 160)
+
+def color_blue(x, y):
+    return map(smooth_terrain[x][y], 10, 50, 30, 90)
+
 def draw_surface():
     translate((col / -2), (row / -2), (depth / 2))
     for y in range(row/scl):
@@ -101,15 +110,9 @@ def draw_surface():
         for x in range(col/scl + 1):
             stroke(45, 80)
             noStroke()
-            color_red = map(smooth_terrain[x][y], 0, 50, 30, 225)
-            color_green = map(smooth_terrain[x][y], 0, 50, 100, 160)
-            color_blue = map(smooth_terrain[x][y], 0, 50, 30, 90)
-            fill(color_red, color_green, color_blue)
+            fill(color_red(x, y), color_green(x, y), color_blue(x, y))
             vertex(x*scl, y*scl, smooth_terrain[x][y])
-            color_red = map(smooth_terrain[x][y+1], 0, 50, 30, 225)
-            color_green = map(smooth_terrain[x][y+1], 0, 50, 100, 160)
-            color_blue = map(smooth_terrain[x][y+1], 0, 50, 30, 90)
-            fill(color_red, color_green, color_blue)
+            fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
             vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1])
         endShape()
 
