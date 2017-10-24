@@ -12,6 +12,8 @@ col = 400
 row = 400
 depth = 40
 
+file_name = None
+
 terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 z_value = [0 for x in range(col)]
@@ -30,7 +32,7 @@ def make_circle(cx, cy, r, z):
                 if z_new > smooth_terrain[x][y]:
                     # print "z_new = ", z_new
                     smooth_terrain[x][y] = z_new
-
+    
 def x_coord(i):
     return int(coord_arr[i].x)/scl
 
@@ -42,37 +44,49 @@ def set_terrain(coord_arr):
         terrain[x_coord(i)][y_coord(i)] = int(coord_arr[i].z)
     r = 8
     for i in range(len(coord_arr)):
-        # for j in range(1):
         make_circle(x_coord(i), y_coord(i), r, int(coord_arr[i].z))
-            # r += 1
-
+    
+    x_offset = 0
+    for x in range(1, row/scl):
+        y_offset = 0
+        for y in range(1, col/scl):
+            smooth_terrain[x][y] = smooth_terrain[x][y] + map(noise(y_offset, x_offset), 0, 1, 0, 5)
+            y_offset += 1
+        x_offset += 1
+            
 # function to scale the input to fit the shape.
 def scale_input(coord_arr):
-    scale_factor = max(Coord.max_x, Coord.max_y, Coord.max_z) * 1.25 # I'm scaling above the max_coord by 2 to get the points off the edge.
-    print "scale_factor = ", scale_factor
+    scale_z = max(Coord.max_x, Coord.max_y)
+    scale_x = Coord.min_x + Coord.max_x
+    scale_y = Coord.min_y + Coord.max_y
     print("SCALED COORDS")
     for i in range(Coord.num_coords):
-        coord_arr[i].x = round(map(coord_arr[i].x, 0, scale_factor, 0, col), -1)
-        coord_arr[i].y = round(map(coord_arr[i].y, 0, scale_factor, 0, row), -1)
-        coord_arr[i].z = round(map(coord_arr[i].z, 0, scale_factor, 0, row), 0)
+        coord_arr[i].x = round(map(coord_arr[i].x, 0, scale_x, 0, col), -1)
+        coord_arr[i].y = round(map(coord_arr[i].y, 0, scale_y, 0, row), -1)
+        coord_arr[i].z = round(map(coord_arr[i].z, 0, scale_z, 0, row), 0)
         print coord_arr[i].x, "\t", coord_arr[i].y, "\t", coord_arr[i].z
     return(coord_arr)
 
+def fileSelected(selection):
+    if selection == None:
+        print("Window was closed or the user hit cancel.")
+    else:
+        print("User selected" + selection.getAbsolutePath())
+    file_name = selection
+    print type(selection)
+    
+
 def setup():
+    # selectInput("Select a file to process:", "fileSelected")
     frameRate(30)
     size(col*3, row*3, P3D)
+    # while file_name is None:
+    #     print "waiting..."
     input = take_input()
     global coord_arr # make coord_array global so I can access in draw()
     coord_arr = set_coords(input)
     coord_arr = scale_input(coord_arr)
     set_terrain(coord_arr)
-    yOffset = 0
-    # for y in range(3, row/scl - 2):
-    #     xOffset = 0
-    #     for x in range(3, col/scl - 2):
-    #         terrain[x][y] = map(noise(xOffset, yOffset), 0, 1, 0, 30)
-    #         xOffset += 0.08
-    #     yOffset += 0.08
 
 def draw_surface():
     translate((col / -2), (row / -2), (depth / 2))
@@ -99,7 +113,7 @@ def draw():
     draw_surface()
 
 def take_input():
-    input = open("demo5.mod1").read()
+    input = open("demo3.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
@@ -114,19 +128,9 @@ def set_coords(input):
         Coord.num_coords += 1
         print coord_arr[i].x, "\t", coord_arr[i].y, "\t", coord_arr[i].z
 
-    print
-    # sum_x = 0
-    # sum_y = 0
-    # sum_z = 0
-    # print sum_x
-    # for i in range(Coord.num_coords):
-    #     sum_x += coord_arr[i].x
-    #     sum_y += coord_arr[i].y
-    #     sum_z += coord_arr[i].z
-    # Coord.ave_x = sum_x / Coord.num_coords
-    # Coord.ave_y = sum_y / Coord.num_coords
-    # Coord.ave_z = sum_z / Coord.num_coords
-    print Coord.ave_x, Coord.ave_y, Coord.ave_z
+    Coord.min_x = min(X.x for X in coord_arr)
+    Coord.min_y = min(Y.y for Y in coord_arr)
+    Coord.min_z = min(Z.z for Z in coord_arr)
     Coord.max_x = max(X.x for X in coord_arr)
     Coord.max_y = max(Y.y for Y in coord_arr)
     Coord.max_z = max(Z.z for Z in coord_arr)
@@ -220,21 +224,18 @@ class Coord(object):
     upX = 0
     upY = 1
     upZ = 0
-    ave_x = 0
-    ave_y = 0
-    ave_z = 0
+    min_x = 0
+    min_y = 0
+    min_z = 0
+    max_x = 0
+    max_y = 0
+    max_z = 0
     
     def __init__(self, tempX, tempY, tempZ):
         self.x = int(tempX)
         self.y = int(tempY)
         self.z = int(tempZ)
-        
-    def max_coord(self, max_x, max_y, max_z):
-        self.max_x = int(max_x)
-        self.max_y = int(max_y)
-        self.max_z = int(max_z)
-    
-  
+
         
     # def cols(self, max_x):
     #     self.cols = max_x/scl
