@@ -42,7 +42,7 @@ def y_coord(i):
 def set_terrain(coord_arr):
     for i in range(len(coord_arr)):
         terrain[x_coord(i)][y_coord(i)] = int(coord_arr[i].z)
-    r = 8
+    r = 9
     for i in range(len(coord_arr)):
         make_circle(x_coord(i), y_coord(i), r, int(coord_arr[i].z))
     
@@ -56,9 +56,15 @@ def set_terrain(coord_arr):
             
 # function to scale the input to fit the shape.
 def scale_input(coord_arr):
-    scale_z = max(Coord.max_x, Coord.max_y)
+    # scale_z = max(Coord.max_x, Coord.max_y)
     scale_x = Coord.min_x + Coord.max_x
     scale_y = Coord.min_y + Coord.max_y
+    if scale_y > scale_x:
+        scale_z = scale_y
+    else:
+        scale_z = scale_x
+    # scale_y = scale_x
+    print "scale_x,y,z = ", scale_x, scale_y, scale_z
     print("SCALED COORDS")
     for i in range(Coord.num_coords):
         coord_arr[i].x = round(map(coord_arr[i].x, 0, scale_x, 0, col), -1)
@@ -113,7 +119,7 @@ def draw():
     draw_surface()
 
 def take_input():
-    input = open("demo3.mod1").read()
+    input = open("demo5.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
