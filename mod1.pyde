@@ -1,6 +1,5 @@
 
-
-
+import math
 
 ############### THIS IS HOW YOU MAKE QUICK STRUCT LIKE ELEMENTS OUT OF TUPLES##########
 #from collections import namedtuple
@@ -17,61 +16,45 @@ terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 z_value = [0 for x in range(col)]
 
-def set_smooth_terrain():
-    for y in range(0, row, 10):
-        print "fuck"
-        for x in range(0, col, 10):
-            adjacent_sec = 0
-            section_tot = 0.0
-            if ((x/scl) - 1) > 0:
-                section_tot += terrain_copy[((x-1)/scl)][(y/scl)]
-                adjacent_sec += 1
-                if ((y/scl) - 1) > 0:
-                    section_tot += terrain_copy[((x-1)/scl)][((y-1)/scl)]
-                    adjacent_sec += 1
-                if ((y/scl) + 1) < row:
-                    section_tot += terrain_copy[((x-1)/scl)][((y+1)/scl)]
-                    adjacent_sec += 1
-            # print "adjacent_sec = ", adjacent_sec
-            # print "section_tot = ", section_tot
-            if ((x/scl) + 1) < col:
-                section_tot += terrain_copy[((x+1)/scl)][(y/scl)]
-                adjacent_sec += 1
-                if ((y/scl) - 1) > 0:
-                    section_tot += terrain_copy[((x+1)/scl)][((y-1)/scl)]
-                    adjacent_sec += 1
-                if ((y/scl) + 1) < row:
-                    section_tot += terrain_copy[((x+1)/scl)][((y+1)/scl)]
-                    adjacent_sec += 1
-            if ((y/scl) - 1) > 0:
-                section_tot += terrain_copy[(x/scl)][((y-1)/scl)]
-                adjacent_sec += 1
-            if ((y/scl) + 1) < row:
-                section_tot += terrain_copy[(x/scl)][((y+1)/scl)]
-                adjacent_sec += 1
-            print "adjacent_sec = ", adjacent_sec
-            print "section_tot = ", section_tot
-            smooth_terrain[(x/scl)][(y/scl)] = terrain_copy[(x/scl)][(y/scl)] + section_tot // adjacent_sec * .5
-    return smooth_terrain
+def dist(x1, y1, x2, y2):
+    return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+
+def make_circle(cx, cy, r, z):
+    for x in range(cx - r, cx + r):
+        for y in range(cy - r, cy + r):
+            z_dist = dist(cx, cy, x, y)
+            z_new = (((cos(z_dist/3)+1)/PI)*z) #change the z_dist divisor to influence and tweak
+            # z_new = (z_dist ** (1/3)) / (z + 1)
+            # print "z_dist = ", z_dist
+            if z_dist <= r:
+                if z_new > smooth_terrain[x][y]:
+                    # print "z_new = ", z_new
+                    smooth_terrain[x][y] = z_new
+
+def x_coord(i):
+    return int(coord_arr[i].x)/scl
+
+def y_coord(i):
+    return int(coord_arr[i].y)/scl
 
 def set_terrain(coord_arr):
-    # Coord.num_coords = 0
     for i in range(len(coord_arr)):
-        terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)] = int(coord_arr[i].z)
-        # print terrain[(int(coord_arr[i].x)/scl)][(int(coord_arr[i].y)/scl)]
-    global terrain_copy
-    terrain_copy = terrain
-    for i in range(0, 6):
-        terrain_copy = set_smooth_terrain()
+        terrain[x_coord(i)][y_coord(i)] = int(coord_arr[i].z)
+    r = 8
+    for i in range(len(coord_arr)):
+        # for j in range(1):
+        make_circle(x_coord(i), y_coord(i), r, int(coord_arr[i].z))
+            # r += 1
 
 # function to scale the input to fit the shape.
 def scale_input(coord_arr):
-    scale_factor = max(Coord.max_x, Coord.max_y, Coord.max_z) * 1.25 # I'm scaling above the max_coord by 1.25 to get the points off the edge.
+    scale_factor = max(Coord.max_x, Coord.max_y, Coord.max_z) * 1.25 # I'm scaling above the max_coord by 2 to get the points off the edge.
+    print "scale_factor = ", scale_factor
     print("SCALED COORDS")
     for i in range(Coord.num_coords):
         coord_arr[i].x = round(map(coord_arr[i].x, 0, scale_factor, 0, col), -1)
         coord_arr[i].y = round(map(coord_arr[i].y, 0, scale_factor, 0, row), -1)
-        coord_arr[i].z = round(map(coord_arr[i].z, 0, scale_factor, 0, row), -1)
+        coord_arr[i].z = round(map(coord_arr[i].z, 0, scale_factor, 0, row), 0)
         print coord_arr[i].x, "\t", coord_arr[i].y, "\t", coord_arr[i].z
     return(coord_arr)
 
@@ -98,8 +81,8 @@ def draw_surface():
         for x in range(col/scl + 1):
             stroke(255, 75)
             fill(0, 0, 265, 80)
-            vertex(x*scl, y*scl, terrain_copy[x][y])
-            vertex(x*scl, (y+1)*scl, terrain_copy[x][y+1])
+            vertex(x*scl, y*scl, smooth_terrain[x][y])
+            vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1])
         endShape()
 
 def draw():
@@ -116,7 +99,7 @@ def draw():
     draw_surface()
 
 def take_input():
-    input = open("demo4.mod1").read()
+    input = open("demo1.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
@@ -132,6 +115,18 @@ def set_coords(input):
         print coord_arr[i].x, "\t", coord_arr[i].y, "\t", coord_arr[i].z
 
     print
+    # sum_x = 0
+    # sum_y = 0
+    # sum_z = 0
+    # print sum_x
+    # for i in range(Coord.num_coords):
+    #     sum_x += coord_arr[i].x
+    #     sum_y += coord_arr[i].y
+    #     sum_z += coord_arr[i].z
+    # Coord.ave_x = sum_x / Coord.num_coords
+    # Coord.ave_y = sum_y / Coord.num_coords
+    # Coord.ave_z = sum_z / Coord.num_coords
+    print Coord.ave_x, Coord.ave_y, Coord.ave_z
     Coord.max_x = max(X.x for X in coord_arr)
     Coord.max_y = max(Y.y for Y in coord_arr)
     Coord.max_z = max(Z.z for Z in coord_arr)
@@ -225,6 +220,9 @@ class Coord(object):
     upX = 0
     upY = 1
     upZ = 0
+    ave_x = 0
+    ave_y = 0
+    ave_z = 0
     
     def __init__(self, tempX, tempY, tempZ):
         self.x = int(tempX)
@@ -235,12 +233,57 @@ class Coord(object):
         self.max_x = int(max_x)
         self.max_y = int(max_y)
         self.max_z = int(max_z)
+    
+  
         
     # def cols(self, max_x):
     #     self.cols = max_x/scl
 
     # def rows(self, max_y):
     #     self.rows = max_y/scl
-       
 
-        
+
+
+
+
+
+
+
+
+
+
+# def set_smooth_terrain():
+#     for y in range(0, row, 10):
+#         for x in range(0, col, 10):
+#             adjacent_sec = 0
+#             section_tot = 0.0
+#             if ((x/scl) - 1) > 0:
+#                 section_tot += terrain_copy[((x-1)/scl)][(y/scl)]
+#                 adjacent_sec += 1
+#                 if ((y/scl) - 1) > 0:
+#                     section_tot += terrain_copy[((x-1)/scl)][((y-1)/scl)]
+#                     adjacent_sec += 1
+#                 if ((y/scl) + 1) < row:
+#                     section_tot += terrain_copy[((x-1)/scl)][((y+1)/scl)]
+#                     adjacent_sec += 1
+#             # print "adjacent_sec = ", adjacent_sec
+#             # print "section_tot = ", section_tot
+#             if ((x/scl) + 1) < col:
+#                 section_tot += terrain_copy[((x+1)/scl)][(y/scl)]
+#                 adjacent_sec += 1
+#                 if ((y/scl) - 1) > 0:
+#                     section_tot += terrain_copy[((x+1)/scl)][((y-1)/scl)]
+#                     adjacent_sec += 1
+#                 if ((y/scl) + 1) < row:
+#                     section_tot += terrain_copy[((x+1)/scl)][((y+1)/scl)]
+#                     adjacent_sec += 1
+#             if ((y/scl) - 1) > 0:
+#                 section_tot += terrain_copy[(x/scl)][((y-1)/scl)]
+#                 adjacent_sec += 1
+#             if ((y/scl) + 1) < row:
+#                 section_tot += terrain_copy[(x/scl)][((y+1)/scl)]
+#                 adjacent_sec += 1
+#             print "adjacent_sec = ", adjacent_sec
+#             print "section_tot = ", section_tot
+#             smooth_terrain[(x/scl)][(y/scl)] = terrain_copy[(x/scl)][(y/scl)] + section_tot // adjacent_sec * 1.9
+#     return smooth_terrain
