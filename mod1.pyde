@@ -139,7 +139,7 @@ def make_circle(cx, cy, r, z):
 ######### CHANGE_VIEW ############
 ##################################
 def change_view():
-    camera(Coord.eyeX, Coord.eyeY, Coord.eyeZ, Coord.centerX, Coord.centerY, Coord.centerZ, Coord.upX, Coord.upY, Coord.upZ)
+    camera(Env.eyeX, Env.eyeY, Env.eyeZ, Env.centerX, Env.centerY, Env.centerZ, Env.upX, Env.upY, Env.upZ)
     zoom()
     pan()
 
@@ -147,23 +147,23 @@ def change_view():
 ######### ROTATE SHAPE ###########
 ##################################
 def rotate_shape():
-    rotateX(Coord.x % 2*PI)
-    rotateY(Coord.y % 2*PI)
-    rotateZ(Coord.z % 2*PI)
+    rotateX(Env.x % 2*PI)
+    rotateY(Env.y % 2*PI)
+    rotateZ(Env.z % 2*PI)
     if keyPressed is True:
         if key == CODED:
             if keyCode == UP:
-                Coord.x += PI/256
+                Env.x += PI/256
             if keyCode == DOWN:
-                Coord.x -= PI/256
+                Env.x -= PI/256
             if keyCode == LEFT:
-                Coord.y -= PI/256
+                Env.y -= PI/256
             if keyCode == RIGHT:
-                Coord.y += PI/256
+                Env.y += PI/256
         if key == 'z':
-            Coord.z -= PI/256
+            Env.z -= PI/256
         if key == 'x':
-            Coord.z += PI/256
+            Env.z += PI/256
 
 ##################################
 ######### RESET ##################
@@ -171,12 +171,12 @@ def rotate_shape():
 def reset():
     if keyPressed is True:
         if key == 'r':
-            Coord.x = 0.3927
-            Coord.y = 0
-            Coord.z = 1.2395
-            Coord.eyeZ = ((row*3)/2.0) / tan(PI*30.0 / 180.0)
-            Coord.centerX = (col*3)/2
-            Coord.centerY = (row*3)/2
+            Env.x = 0.3927
+            Env.y = 0
+            Env.z = 1.2395
+            Env.eyeZ = ((row*3)/2.0) / tan(PI*30.0 / 180.0)
+            Env.centerX = (col*3)/2
+            Env.centerY = (row*3)/2
 
 ##################################
 ######### DRAW_BOX ###############
@@ -218,31 +218,31 @@ def draw_water():
             noStroke()
             # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
             fill(0, 100, 200)
-            vertex(x*scl, y*scl, Coord.water_level)
+            vertex(x*scl, y*scl, Water.water_level)
             # fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
             fill(0, 100, 200)
-            vertex(x*scl, (y+1)*scl, Coord.water_level)
+            vertex(x*scl, (y+1)*scl, Water.water_level)
         endShape()
     pushMatrix()
-    translate(0, 0, Coord.water_level)
+    translate(0, 0, Water.water_level)
     rotateY(PI/2)
-    rect(0, 0, Coord.water_level, col)
+    rect(0, 0, Water.water_level, col)
     translate(0, col)
     rotateX(PI/2)
-    rect(0, 0, Coord.water_level, col)
+    rect(0, 0, Water.water_level, col)
     popMatrix()
     
     pushMatrix()
     rotateX(PI)
     rotateZ(3*PI/2)
     rotateY(PI/2)
-    rect(0, 0, Coord.water_level, col)
+    rect(0, 0, Water.water_level, col)
     translate(0, col)
     rotateX(PI/2)
-    rect(0, 0, Coord.water_level, col)
+    rect(0, 0, Water.water_level, col)
     popMatrix()
-    Coord.water_level = (Coord.water_level + 0.5) % 90
-    print Coord.water_level
+    # Water.water_level = (Water.water_level + 0.5) % 90
+    print Water.water_level
 
 
 ###################################
@@ -266,13 +266,13 @@ def fileSelected(selection):
     print type(selection)
     
 def color_red(x, y):
-    return map(smooth_terrain[x][y], 0, 50, 30, 225)
+    return map(smooth_terrain[x][y], 0, 52, 30, 195)
 
 def color_green(x, y):
-    return map(smooth_terrain[x][y], 0, 50, 100, 160)
+    return map(smooth_terrain[x][y], 0, 45, 100, 160)
 
 def color_blue(x, y):
-    return map(smooth_terrain[x][y], 10, 50, 30, 90)
+    return map(smooth_terrain[x][y], 10, 60, 30, 140)
 
 def draw_grid():
     pushMatrix()
@@ -286,43 +286,33 @@ def draw_grid():
 def zoom():
     if keyPressed is True:
         if key == '-':
-            Coord.eyeZ += 10
+            Env.eyeZ += 10
         if key == '+':
-            Coord.eyeZ -= 10
+            Env.eyeZ -= 10
 
 def pan():
     if keyPressed is True:
         if key == 'a':
-            Coord.centerX += 10
+            Env.centerX += 10
         if key == 'd':
-            Coord.centerX -= 10
+            Env.centerX -= 10
         if key == 'w':
-            Coord.centerY += 10
+            Env.centerY += 10
         if key == 's':
-            Coord.centerY -= 10
+            Env.centerY -= 10
+
+
+class Water(object):
+    
+    water_level = 1
+
+    def __init__(self):
+        pass
 
 class Coord(object):
     
-    # x = 0.3927
-    # y = 0
-    # z = 1.2395
-    
-    x = 0
-    y = 0
-    z = 0
-    water_level = 1
     num_coords = 0
-    
-    # camera variables at default settings
-    eyeX = (col*3)/2
-    eyeY = (row*3)/2
-    eyeZ = ((row*3)/2.0) / tan(PI*30.0 / 180.0)
-    centerX = (col*3)/2
-    centerY = (row*3)/2
-    centerZ = 0
-    upX = 0
-    upY = 1
-    upZ = 0
+   
     min_x = 0
     min_y = 0
     min_z = 0
@@ -334,3 +324,21 @@ class Coord(object):
         self.x = int(tempX)
         self.y = int(tempY)
         self.z = int(tempZ)
+        
+
+class Env(object):
+    
+    x = 0.3927
+    y = 0
+    z = 1.2395
+    
+    # camera variables at default settings
+    eyeX = (col*3)/2
+    eyeY = (row*3)/2
+    eyeZ = ((row*3)/2.0) / tan(PI*30.0 / 180.0)
+    centerX = (col*3)/2
+    centerY = (row*3)/2
+    centerZ = 0
+    upX = 0
+    upY = 1
+    upZ = 0
