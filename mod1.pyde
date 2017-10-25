@@ -10,7 +10,6 @@ scl = 10
 col = 400
 row = 400
 depth = 40
-water_level = 1
 
 file_name = None
 
@@ -219,31 +218,31 @@ def draw_water():
             noStroke()
             # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
             fill(0, 100, 200)
-            vertex(x*scl, y*scl, water_level)
+            vertex(x*scl, y*scl, Coord.water_level)
             # fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
             fill(0, 100, 200)
-            vertex(x*scl, (y+1)*scl, water_level)
+            vertex(x*scl, (y+1)*scl, Coord.water_level)
         endShape()
     pushMatrix()
-    translate(0, 0, water_level)
+    translate(0, 0, Coord.water_level)
     rotateY(PI/2)
-    rect(0, 0, water_level, col)
+    rect(0, 0, Coord.water_level, col)
     translate(0, col)
     rotateX(PI/2)
-    rect(0, 0, water_level, col)
+    rect(0, 0, Coord.water_level, col)
     popMatrix()
     
     pushMatrix()
     rotateX(PI)
     rotateZ(3*PI/2)
     rotateY(PI/2)
-    rect(0, 0, water_level, col)
+    rect(0, 0, Coord.water_level, col)
     translate(0, col)
     rotateX(PI/2)
-    rect(0, 0, water_level, col)
+    rect(0, 0, Coord.water_level, col)
     popMatrix()
-    water_level = (water_level + 10) % 120
-    print water_level
+    Coord.water_level = (Coord.water_level + 0.5) % 90
+    print Coord.water_level
 
 
 ###################################
@@ -311,7 +310,7 @@ class Coord(object):
     x = 0
     y = 0
     z = 0
-    
+    water_level = 1
     num_coords = 0
     
     # camera variables at default settings
