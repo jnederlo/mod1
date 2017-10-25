@@ -1,6 +1,7 @@
 
 import math
 
+
 ##############################################################################
 ############################## GLOBAL VARIABLES ##############################
 ##############################################################################
@@ -11,6 +12,8 @@ row = 400
 depth = 40
 
 file_name = None
+
+
 
 terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
@@ -179,7 +182,8 @@ def reset():
 ##################################
 def draw_box():
     stroke(0, 140, 0)
-    fill(0, 165, 0, 80)
+    noStroke()
+    fill(0, 100, 0)
     pushMatrix()
     box(col, row, depth)
     popMatrix()
