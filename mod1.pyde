@@ -1,7 +1,6 @@
 
 import math
 
-
 ##############################################################################
 ############################## GLOBAL VARIABLES ##############################
 ##############################################################################
@@ -13,11 +12,7 @@ depth = 40
 
 file_name = None
 
-
-
 terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
-smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
-z_value = [0 for x in range(col)]
 
 ##############################################################################
 #################################### SETUP ###################################
@@ -50,6 +45,7 @@ def draw():
     draw_box()
     draw_surface()
     draw_water()
+    # noLoop()
 
 ##################################
 ######### TAKE_INPUT #############
@@ -109,6 +105,11 @@ def scale_input(coord_arr):
 def set_terrain(coord_arr):
     for i in range(len(coord_arr)):
         terrain[x_coord(i)][y_coord(i)] = int(coord_arr[i].z)
+    global smooth_terrain
+    smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
+    for y in range(row/scl + 1):
+        for x in range(col/scl + 1):
+            smooth_terrain[x][y] = My_vertex(x, y, 0)
     r = 9
     for i in range(len(coord_arr)):
         make_circle(x_coord(i), y_coord(i), r, int(coord_arr[i].z))
@@ -116,25 +117,28 @@ def set_terrain(coord_arr):
     for x in range(1, row/scl):
         y_offset = 0
         for y in range(1, col/scl):
-            smooth_terrain[x][y] = smooth_terrain[x][y] + map(noise(y_offset, x_offset), 0, 1, 0, 5)
+            smooth_terrain[x][y].z = smooth_terrain[x][y].z + map(noise(y_offset, x_offset), 0, 1, 0, 5)
             y_offset += 1
         x_offset += 1
 
 ##################################
-######### SET_TERRAIN ############
+######### MAKE_CIRCLE ############
 ##################################
 def make_circle(cx, cy, r, z):
     for x in range(cx - r, cx + r):
         for y in range(cy - r, cy + r):
             z_dist = dist(cx, cy, x, y)
+            # print z_dist
             z_new = (((cos(z_dist/3)+1)/PI)*z) #change the z_dist divisor to influence and tweak
             # z_new = (z_dist ** (1/3)) / (z + 1)
             # print "z_dist = ", z_dist
             if z_dist <= r:
-                if z_new > smooth_terrain[x][y]:
+                # if z_dist == 0:
+                #     print "z_new = ", z_new
+                if z_new > smooth_terrain[x][y].z:
                     # print "z_new = ", z_new
-                    smooth_terrain[x][y] = z_new
-
+                    smooth_terrain[x][y].z = z_new 
+    
 ##################################
 ######### CHANGE_VIEW ############
 ##################################
@@ -184,7 +188,7 @@ def reset():
 def draw_box():
     stroke(0, 140, 0)
     noStroke()
-    fill(0, 100, 0)
+    fill(0, 100, 200)
     pushMatrix()
     box(col, row, depth)
     popMatrix()
@@ -200,10 +204,10 @@ def draw_surface():
         for x in range(col/scl + 1):
             stroke(45, 80)
             noStroke()
-            fill(color_red(x, y), color_green(x, y), color_blue(x, y))
-            vertex(x*scl, y*scl, smooth_terrain[x][y])
-            fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
-            vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1])
+            fill(color_red(smooth_terrain[x][y].z), color_green(smooth_terrain[x][y].z), color_blue(smooth_terrain[x][y].z))
+            vertex(x*scl, y*scl, smooth_terrain[x][y].z)
+            fill(color_red(smooth_terrain[x][y+1].z), color_green(smooth_terrain[x][y+1].z), color_blue(smooth_terrain[x][y+1].z))
+            vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1].z)
         endShape()
     popMatrix()
 
@@ -212,6 +216,10 @@ def draw_surface():
 ##################################
 def draw_water():
     translate((col / -2), (row / -2), (depth / 2))
+    #TRYING TO ADD WAVE
+    # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
+    # rotateX(Water.x % PI) # I added a rotate to make it appear it's coming from one side.
+    # Water.x += PI/5000 # I increase the rotate slowly.
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
         for x in range(col/scl + 1):
@@ -241,8 +249,16 @@ def draw_water():
     rotateX(PI/2)
     rect(0, 0, Water.water_level, col)
     popMatrix()
-    # Water.water_level = (Water.water_level + 0.5) % 90
+    Water.water_level = (Water.water_level + 0.05) % 90
     print Water.water_level
+
+
+
+
+
+
+
+
 
 
 ###################################
@@ -265,14 +281,14 @@ def fileSelected(selection):
     file_name = selection
     print type(selection)
     
-def color_red(x, y):
-    return map(smooth_terrain[x][y], 0, 52, 30, 195)
+def color_red(z):
+    return map(z, 0, 52, 30, 195)
 
-def color_green(x, y):
-    return map(smooth_terrain[x][y], 0, 45, 100, 160)
+def color_green(z):
+    return map(z, 0, 45, 100, 160)
 
-def color_blue(x, y):
-    return map(smooth_terrain[x][y], 10, 60, 30, 140)
+def color_blue(z):
+    return map(z, 10, 60, 30, 140)
 
 def draw_grid():
     pushMatrix()
@@ -302,9 +318,19 @@ def pan():
             Env.centerY -= 10
 
 
+class My_vertex(object):
+    
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
+        self.grade = 0
+
+
 class Water(object):
     
     water_level = 1
+    x = .07
 
     def __init__(self):
         pass
