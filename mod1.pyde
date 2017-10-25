@@ -10,6 +10,7 @@ scl = 10
 col = 400
 row = 400
 depth = 40
+water_level = 1
 
 file_name = None
 
@@ -49,6 +50,7 @@ def draw():
     reset()
     draw_box()
     draw_surface()
+    draw_water()
 
 ##################################
 ######### TAKE_INPUT #############
@@ -192,6 +194,7 @@ def draw_box():
 ######### DRAW_SURFACE ###########
 ##################################
 def draw_surface():
+    pushMatrix()
     translate((col / -2), (row / -2), (depth / 2))
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
@@ -203,10 +206,44 @@ def draw_surface():
             fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
             vertex(x*scl, (y+1)*scl, smooth_terrain[x][y+1])
         endShape()
+    popMatrix()
 
-
-
-
+##################################
+######### DRAW_WATER #############
+##################################
+def draw_water():
+    translate((col / -2), (row / -2), (depth / 2))
+    for y in range(row/scl):
+        beginShape(TRIANGLE_STRIP)
+        for x in range(col/scl + 1):
+            noStroke()
+            # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
+            fill(0, 100, 200)
+            vertex(x*scl, y*scl, water_level)
+            # fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
+            fill(0, 100, 200)
+            vertex(x*scl, (y+1)*scl, water_level)
+        endShape()
+    pushMatrix()
+    translate(0, 0, water_level)
+    rotateY(PI/2)
+    rect(0, 0, water_level, col)
+    translate(0, col)
+    rotateX(PI/2)
+    rect(0, 0, water_level, col)
+    popMatrix()
+    
+    pushMatrix()
+    rotateX(PI)
+    rotateZ(3*PI/2)
+    rotateY(PI/2)
+    rect(0, 0, water_level, col)
+    translate(0, col)
+    rotateX(PI/2)
+    rect(0, 0, water_level, col)
+    popMatrix()
+    water_level = (water_level + 10) % 120
+    print water_level
 
 
 ###################################
@@ -267,9 +304,13 @@ def pan():
 
 class Coord(object):
     
-    x = 0.3927
+    # x = 0.3927
+    # y = 0
+    # z = 1.2395
+    
+    x = 0
     y = 0
-    z = 1.2395
+    z = 0
     
     num_coords = 0
     
