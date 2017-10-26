@@ -40,11 +40,13 @@ def draw():
     # draw_grid()
     change_view()
     translate(width/2, height/2 + 100)
+    pick_mode()
     rotate_shape()
     reset()
-    # draw_box()
+    draw_box()
     draw_surface()
     draw_water()
+    # smooth_colors()
     # noLoop()
 
 ##################################
@@ -126,7 +128,7 @@ def set_terrain(coord_arr):
     r = 9
     for y in range(row/scl+1):
         for x in range(col/scl+1):
-            water_terrain[x][y] = smooth_terrain[x][y].z
+            water_terrain[x][y] = 0
     for water in water_arr:
         make_water_circle(water.x, water.y, r, int(water.stop_z)) 
 
@@ -178,9 +180,9 @@ def gradient():
                 if (smooth_terrain[x][y].x >= edge_x*.85 or smooth_terrain[x][y].y <= edge_y*.15):
                     continue
                 My_vertex.low_points.append(smooth_terrain[x][y])
-                print "found low point"
-                print smooth_terrain[x][y].x, smooth_terrain[x][y].y
-                print
+                # print "found low point"
+                # print smooth_terrain[x][y].x, smooth_terrain[x][y].y
+                # print
             else:
                 continue
     
@@ -300,6 +302,20 @@ def reset():
             Env.centerX = (col*3)/2
             Env.centerY = (row*3)/2
 
+def pick_mode():
+    if keyPressed is True:
+        if key == ' ':
+            Env.freeze = not Env.freeze
+        # elif key == '1':
+            
+        # elif key == '2':
+            
+        # elif key == '3':
+        
+        elif key == 'f':
+            Env.water_flush = not Env.water_flush
+            
+
 ##################################
 ######### DRAW_BOX ###############
 ##################################
@@ -333,6 +349,7 @@ def draw_surface():
 ######### DRAW_WATER #############
 ##################################
 def draw_water():
+    fill(0, 100, 200, 100 + Env.transparency)
     translate((col / -2), (row / -2), (depth / 2))
     #TRYING TO ADD WAVE
     # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
@@ -343,10 +360,9 @@ def draw_water():
         for x in range(col/scl + 1):
             noStroke()
             # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
-            fill(0, 100, 200)
+            # fill(0, 100, 200, 200)
             vertex(x*scl, y*scl, Water.water_level)
             # fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
-            fill(0, 100, 200)
             vertex(x*scl, (y+1)*scl, Water.water_level)
         endShape()
     
@@ -354,8 +370,9 @@ def draw_water():
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
         for x in range(col/scl + 1):
+            stroke(255, 255, 255)
             noStroke()
-            fill(0, 100, 200)
+            # fill(0, 100, 200)
             # flag = False
             # for water in water_arr:
             #     if water.x == x and water.y == y:
@@ -381,6 +398,7 @@ def draw_water():
     #     # translate(0, 0, water.z)
     #     # rect(water.x * scl, water.y * scl, water.w * scl, water.h * scl)
     #     popMatrix()
+    # fill(0, 100, 200)
     pushMatrix()
     translate(0, 0, Water.water_level)
     rotateY(PI/2)
@@ -399,12 +417,31 @@ def draw_water():
     rotateX(PI/2)
     rect(0, 0, Water.water_level, col)
     popMatrix()
-    Water.water_level = (Water.water_level + 0.04) % 90
-    if Water.water_rate >= 6.9:
-        Water.water_rate = 6.9
-    else:
-        Water.water_rate = Water.water_rate + 0.01
-    # print Water.water_level
+    if Env.freeze is False:
+        if Env.water_flush is True:
+            Env.transparency = (Env.transparency - 0.05)
+            print Water.water_level
+            if Water.water_level <= 0.06:
+                print "STOP"
+                Water.water_rate = 0
+                Water.water_level = 0
+                Env.transparency = 0
+                if Water.water_rate <= 0:
+                    Water.water_rate = 0
+            else:
+                Water.water_level = (Water.water_level - 0.05) % 65
+                Water.water_rate = Water.water_rate - 0.05
+        else:
+            Water.water_level = (Water.water_level + 0.05) % 65
+            Env.transparency = (Env.transparency + 0.05)
+            if Water.water_level <= 0.05:
+                Water.water_rate = 0
+                Env.transparency = 0
+            if Water.water_rate >= 6.9:
+                Water.water_rate = 6.9
+            else:
+                Water.water_rate = Water.water_rate + 0.05
+        # print Water.water_level
 
 
 
@@ -498,7 +535,7 @@ class Water_shape(object):
 class Water(object):
     
     water_level = 1
-    water_rate = .01
+    water_rate = 0
     x = .07
     
     def __init__(self):
@@ -523,13 +560,15 @@ class Coord(object):
 
 class Env(object):
     
-    # x = 0.3927
-    # y = 0
-    # z = 1.2395
-    z = 0
-    x = 0
+    x = 0.3927
     y = 0
-    
+    z = 1.2395
+    # z = 0
+    # x = 0
+    # y = 0
+    freeze = False
+    water_flush = False
+    transparency = 0
     # camera variables at default settings
     eyeX = (col*3)/2
     eyeY = (row*3)/2
