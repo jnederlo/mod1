@@ -146,6 +146,9 @@ def set_terrain(coord_arr):
     for water in water_arr:
         make_water_circle(water.x, water.y, r, int(water.stop_z)) 
 
+##################################
+###### MAKE_WATER_CIRCLE #########
+##################################
 def make_water_circle(cx, cy, r, z):
     for x in range(cx - r, cx + r):
         for y in range(cy - r, cy + r):
@@ -161,7 +164,10 @@ def make_water_circle(cx, cy, r, z):
                 if z_new > water_terrain[x][y]:
                     # print "z_new = ", z_new
                     water_terrain[x][y] = z_new
-                
+ 
+##################################
+########### GRADIENT #############
+##################################               
 def gradient():
     for y in range(5, row/scl - 5):
         for x in range(5, col/scl - 5):
@@ -344,7 +350,7 @@ def pick_mode():
 def draw_box():
     stroke(0, 140, 0)
     noStroke()
-    fill(0, 100, 200)
+    fill(0, 100, 0)
     pushMatrix()
     box(col, row, depth)
     popMatrix()
@@ -381,15 +387,24 @@ def draw_water():
         beginShape(TRIANGLE_STRIP)
         for x in range(col/scl + 1):
             noStroke()
-            fill(0, 100, 200, 100)
+            fill(0, 100, 200, Water.blue_opaq)
             # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
             # fill(0, 100, 200, 200)
             vertex(x*scl, y*scl, Water.water_level)
             # fill(color_red(x, y + 1), color_green(x, y + 1), color_blue(x, y + 1))
             vertex(x*scl, (y+1)*scl, Water.water_level)
+        if Water.blue_opaq >= 160:
+            Water.blue_opaq = 160
+        else:
+            Water.blue_opaq += .005
+        print(Water.blue_opaq)
         endShape()
     popMatrix()
 
+
+##################################
+########### DRAW_WAVE ############
+##################################
 def draw_wave():
     translate((col / -2), (row / -2), (depth / 2))
     #TRYING TO ADD WAVE
@@ -417,6 +432,9 @@ def draw_wave():
         yoff += 0.01
     popMatrix()
 
+##################################
+######## DRAW_WATER_LOW ##########
+##################################
 def draw_water_low():    
     if len(coord_arr) > 10:
         pushMatrix()
@@ -424,7 +442,7 @@ def draw_water_low():
             beginShape(TRIANGLE_STRIP)
             for x in range(10, col/scl - 9):
                 # stroke(255, 255, 255)
-                fill(0, 100, 200, 100)
+                fill(0, 100, 200, 50)
                 noStroke()
                 # fill(0, 100, 200)
                 # flag = False
@@ -454,7 +472,11 @@ def draw_water_low():
     #     popMatrix()
     # fill(0, 100, 200)
 
+##################################
+########## DRAW_SIDES ############
+##################################
 def draw_sides():
+    fill(0, 100, 200, Water.blue_opaq)
     pushMatrix()
     translate(0, 0, Water.water_level)
     rotateY(PI/2)
@@ -474,6 +496,10 @@ def draw_sides():
     rect(0, 0, Water.water_level, col)
     popMatrix()
 
+
+##################################
+########## UPDATE_ENV ############
+##################################
 def update_env():
     if Env.freeze is False:
         if Env.water_flush is True:
@@ -598,6 +624,7 @@ class Water(object):
     water_max = 0
     water_rate = 0
     x = .07
+    blue_opaq = 110
     
     def __init__(self):
         pass
