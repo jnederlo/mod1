@@ -55,8 +55,11 @@ def draw():
         draw_water()
         draw_sides()
         update_env()
-    # elif Env.mode == 3:
-        
+    elif Env.mode == 3:
+        draw_surface()
+        draw_wave()
+        draw_sides()
+        update_env()
     # smooth_colors()
     # noLoop()
 
@@ -387,6 +390,33 @@ def draw_water():
         endShape()
     popMatrix()
 
+def draw_wave():
+    translate((col / -2), (row / -2), (depth / 2))
+    #TRYING TO ADD WAVE
+    # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
+    # rotateX(Water.x % PI) # I added a rotate to make it appear it's coming from one side.
+    # Water.x += PI/5000 # I increase the rotate slowly.
+    
+    pushMatrix()
+    yoff = 0
+    for y in range(row/scl):
+        beginShape(TRIANGLE_STRIP)
+        xoff = 0
+        for x in range(col/scl + 1):
+            noStroke()
+            fill(0, 100, 200, 100)
+            # if x == wave:
+                # map(noise(y_offset, x_offset), 0, 1, 0, 10)
+            vertex(x*scl, y*scl, Water.water_level + map(noise(xoff), 0, 1, 0, 5))
+            vertex(x*scl, (y+1)*scl, Water.water_level + map(noise(yoff), 0, 1, 0, 5))
+            # else:
+            #     vertex(x*scl, y*scl, Water.water_level)
+            #     vertex(x*scl, (y+1)*scl, Water.water_level)
+            xoff += 0.05
+        endShape()
+        yoff += 0.01
+    popMatrix()
+
 def draw_water_low():    
     if len(coord_arr) > 10:
         pushMatrix()
@@ -474,6 +504,7 @@ def reset_env():
     Env.transparency = 0
     Water.water_level = 0
     Water.water_rate = 0
+    Water.wave = 1
 
 
 
