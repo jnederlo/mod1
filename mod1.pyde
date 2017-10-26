@@ -107,12 +107,13 @@ def set_terrain(coord_arr):
         terrain[x_coord(i)][y_coord(i)] = int(coord_arr[i].z)
     global smooth_terrain
     smooth_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
-    for y in range(row/scl + 1):
-        for x in range(col/scl + 1):
+    for y in range(row/scl+1):
+        for x in range(col/scl+1):
             smooth_terrain[x][y] = My_vertex(x, y, 0)
     r = 9
     for i in range(len(coord_arr)):
         make_circle(x_coord(i), y_coord(i), r, int(coord_arr[i].z))
+    gradient()
     x_offset = 0
     for x in range(1, row/scl):
         y_offset = 0
@@ -121,6 +122,42 @@ def set_terrain(coord_arr):
             y_offset += 1
         x_offset += 1
 
+            
+def gradient():
+    for y in range(5, row/scl - 5):
+        for x in range(5, col/scl - 5):
+            if smooth_terrain[x-1][y].z < smooth_terrain[x][y].z:
+                smooth_terrain[x][y].set_grade(smooth_terrain[x-1][y])
+            if smooth_terrain[x+1][y].z < smooth_terrain[x][y].z:
+                smooth_terrain[x][y].set_grade(smooth_terrain[x+1][y])
+            if smooth_terrain[x][y+1].z < smooth_terrain[x][y].z:
+                smooth_terrain[x][y].set_grade(smooth_terrain[x][y+1])
+            if smooth_terrain[x][y-1].z < smooth_terrain[x][y].z:
+                smooth_terrain[x][y].set_grade(smooth_terrain[x][y-1])
+            if smooth_terrain[x][y].grade == None:
+                pass
+            else:
+                pass
+                 # print "Lower", smooth_terrain[x][y].grade.x, smooth_terrain[x][y].grade.y, smooth_terrain[x][y].grade.z
+                 # print "Actual", smooth_terrain[x][y].x, smooth_terrain[x][y].y, smooth_terrain[x][y].z
+                 # print 
+                 
+    # for i in range(Coord.num_coords):
+        # print "Actual", smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].x, smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].y
+        # print "Lower", smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].grade.x, smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].grade.y
+        # print
+    for y in range(5, row/scl - 5):
+        for x in range(5, col/scl - 5):
+            if smooth_terrain[x][y].grade == None:
+                My_vertex.low_points.append(smooth_terrain[x][y])
+                # print "found low point"
+                # print smooth_terrain[x][y].x, smooth_terrain[x][y].y
+                # print
+            else:
+                continue
+  
+    print My_vertex.low_points
+            
 ##################################
 ######### MAKE_CIRCLE ############
 ##################################
@@ -249,8 +286,8 @@ def draw_water():
     rotateX(PI/2)
     rect(0, 0, Water.water_level, col)
     popMatrix()
-    Water.water_level = (Water.water_level + 0.05) % 90
-    print Water.water_level
+    # Water.water_level = (Water.water_level + 0.05) % 90
+    # print Water.water_level
 
 
 
@@ -320,12 +357,16 @@ def pan():
 
 class My_vertex(object):
     
+    low_points = []
+    
     def __init__(self, x, y, z):
         self.x = x
         self.y = y
         self.z = z
-        self.grade = 0
+        self.grade = None
 
+    def set_grade(self, My_vertex):
+        self.grade = My_vertex
 
 class Water(object):
     
