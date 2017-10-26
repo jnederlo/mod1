@@ -4,7 +4,7 @@ import math
 ##############################################################################
 ############################## GLOBAL VARIABLES ##############################
 ##############################################################################
-scl = 10
+scl = 8
 
 col = 400
 row = 400
@@ -42,7 +42,7 @@ def draw():
     translate(width/2, height/2 + 100)
     rotate_shape()
     reset()
-    draw_box()
+    # draw_box()
     draw_surface()
     draw_water()
     # noLoop()
@@ -118,21 +118,43 @@ def set_terrain(coord_arr):
     for x in range(1, row/scl):
         y_offset = 0
         for y in range(1, col/scl):
-            smooth_terrain[x][y].z = smooth_terrain[x][y].z + map(noise(y_offset, x_offset), 0, 1, 0, 5)
+            smooth_terrain[x][y].z = smooth_terrain[x][y].z + map(noise(y_offset, x_offset), 0, 1, 0, 10)
             y_offset += 1
         x_offset += 1
+    global water_terrain
+    water_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
+    r = 9
+    for y in range(row/scl+1):
+        for x in range(col/scl+1):
+            water_terrain[x][y] = smooth_terrain[x][y].z
+    for water in water_arr:
+        make_water_circle(water.x, water.y, r, int(water.stop_z)) 
 
-            
+def make_water_circle(cx, cy, r, z):
+    for x in range(cx - r, cx + r):
+        for y in range(cy - r, cy + r):
+            z_dist = dist(cx, cy, x, y)
+            # print z_dist
+            z_new = (((cos(z_dist/3)+1)/PI)*z) + 3 #change the z_dist divisor to influence and tweak
+            # z_new = (z_dist ** (1/3)) / (z + 1)
+            # print "z_dist = ", z_dist
+            if z_dist <= r:
+                # if z_dist == 0:
+                #     print "z_new = ", z_new
+                if z_new > water_terrain[x][y]:
+                    # print "z_new = ", z_new
+                    water_terrain[x][y] = z_new
+                
 def gradient():
     for y in range(5, row/scl - 5):
         for x in range(5, col/scl - 5):
-            if smooth_terrain[x-1][y].z < smooth_terrain[x][y].z:
+            if smooth_terrain[x-1][y].z < smooth_terrain[x][y].z * 1.05:
                 smooth_terrain[x][y].set_grade(smooth_terrain[x-1][y])
-            if smooth_terrain[x+1][y].z < smooth_terrain[x][y].z:
+            if smooth_terrain[x+1][y].z < smooth_terrain[x][y].z * 1.05:
                 smooth_terrain[x][y].set_grade(smooth_terrain[x+1][y])
-            if smooth_terrain[x][y+1].z < smooth_terrain[x][y].z:
+            if smooth_terrain[x][y+1].z < smooth_terrain[x][y].z * 1.05:
                 smooth_terrain[x][y].set_grade(smooth_terrain[x][y+1])
-            if smooth_terrain[x][y-1].z < smooth_terrain[x][y].z:
+            if smooth_terrain[x][y-1].z < smooth_terrain[x][y].z * 1.05:
                 smooth_terrain[x][y].set_grade(smooth_terrain[x][y-1])
             if smooth_terrain[x][y].grade == None:
                 pass
@@ -146,17 +168,76 @@ def gradient():
         # print "Actual", smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].x, smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].y
         # print "Lower", smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].grade.x, smooth_terrain[int(coord_arr[i].x)/scl][int(coord_arr[i].y)/scl].grade.y
         # print
+    edge_x = col/scl
+    edge_y = row/scl
     for y in range(5, row/scl - 5):
         for x in range(5, col/scl - 5):
             if smooth_terrain[x][y].grade == None:
+                if (smooth_terrain[x][y].x <= edge_x*.15 or smooth_terrain[x][y].y >= edge_y*.85):
+                    continue
+                if (smooth_terrain[x][y].x >= edge_x*.85 or smooth_terrain[x][y].y <= edge_y*.15):
+                    continue
                 My_vertex.low_points.append(smooth_terrain[x][y])
-                # print "found low point"
-                # print smooth_terrain[x][y].x, smooth_terrain[x][y].y
-                # print
+                print "found low point"
+                print smooth_terrain[x][y].x, smooth_terrain[x][y].y
+                print
             else:
                 continue
-  
-    print My_vertex.low_points
+    
+    
+    global water_arr
+    water_arr = [0 for x in range(len(My_vertex.low_points))]
+    i = 0
+    for low in My_vertex.low_points:
+        x1 = 1
+        x2 = 1
+        # print "low x", low.x, "low y", low.y, "low z", low.z
+        current = smooth_terrain[low.x][low.y]
+        while smooth_terrain[low.x-x1][low.y].grade == current:
+            current = smooth_terrain[current.x-x1][current.y]
+            x1 += 1
+        z = smooth_terrain[(current.x-x1)+1][current.y].z
+        # print "z = ", z
+        # print "current.z = ", current.z
+        # print
+        z = min(current.z, z)
+        current = smooth_terrain[low.x][low.y]
+        while smooth_terrain[low.x+x2][low.y].grade == current:
+            current = smooth_terrain[current.x+x2][current.y]
+            x2 += 1
+        y1 = 1
+        y2 = 1
+        z = smooth_terrain[(current.x+x2)-1][current.y].z
+        # print "z = ", z
+        # print "current.z = ", current.z
+        # print
+        z = min(current.z, z)
+        current = smooth_terrain[low.x][low.y]
+        while smooth_terrain[low.x][low.y-y1].grade == current:
+            current = smooth_terrain[current.x][current.y-y1]
+            y1 += 1
+        z = smooth_terrain[current.x][(current.y-y1)+1].z
+        # print "z = ", z
+        # print "current.z = ", current.z
+        # print
+        z = min(current.z, z)
+        current = smooth_terrain[low.x][low.y]
+        while smooth_terrain[low.x][low.y+y2].grade == current:
+            current = smooth_terrain[current.x][current.y+y2]
+            y2 += 1
+            
+        z = smooth_terrain[current.x][(current.y+y2)-1].z
+        # print "z = ", z
+        # print "current.z = ", current.z
+        # print
+        z = min(current.z, z)
+        # print "z = ", z
+        water_arr[i] = Water_shape(low.x, low.y, (x1 + x2), (y1 + y2), low.z, z)
+        # print "orig = ", water_arr[i].x, water_arr[i].y, "\nw = ", water_arr[i].w, "h = ", water_arr[i].h
+        # print
+        i += 1
+        
+    # print "low", My_vertex.low_points
             
 ##################################
 ######### MAKE_CIRCLE ############
@@ -268,6 +349,38 @@ def draw_water():
             fill(0, 100, 200)
             vertex(x*scl, (y+1)*scl, Water.water_level)
         endShape()
+    
+    pushMatrix()
+    for y in range(row/scl):
+        beginShape(TRIANGLE_STRIP)
+        for x in range(col/scl + 1):
+            noStroke()
+            fill(0, 100, 200)
+            # flag = False
+            # for water in water_arr:
+            #     if water.x == x and water.y == y:
+            #         flag = True
+            #         vertex(x*scl, y*scl, (water.stop_z - 0.04))
+            #         vertex(x*scl, (y+1)*scl, (water.stop_z - 0.04))
+            #         break
+            # if flag is False:
+            vertex(x*scl, y*scl, (water_terrain[x][y] - 7) + Water.water_rate)
+            vertex(x*scl, (y+1)*scl, (water_terrain[x][y+1] - 7) + Water.water_rate)
+        endShape()
+    popMatrix()
+    
+    # for water in water_arr:
+    #     pushMatrix()
+    #     # fill(0, 100, 200)
+    #     print water.z
+    #     print "water.z = ", water.z
+    #     print "water.stop_z = ", water.stop_z
+    #     print
+    #     # if (water.z + Water.water_rate) < water.stop_z:
+    #     #     water.z = water.z + Water.water_rate
+    #     # translate(0, 0, water.z)
+    #     # rect(water.x * scl, water.y * scl, water.w * scl, water.h * scl)
+    #     popMatrix()
     pushMatrix()
     translate(0, 0, Water.water_level)
     rotateY(PI/2)
@@ -286,7 +399,11 @@ def draw_water():
     rotateX(PI/2)
     rect(0, 0, Water.water_level, col)
     popMatrix()
-    # Water.water_level = (Water.water_level + 0.05) % 90
+    Water.water_level = (Water.water_level + 0.04) % 90
+    if Water.water_rate >= 6.9:
+        Water.water_rate = 6.9
+    else:
+        Water.water_rate = Water.water_rate + 0.01
     # print Water.water_level
 
 
@@ -368,14 +485,25 @@ class My_vertex(object):
     def set_grade(self, My_vertex):
         self.grade = My_vertex
 
+class Water_shape(object):
+
+    def __init__(self, x, y, w, h, z, stop_z):
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.z = z
+        self.stop_z = stop_z
+
 class Water(object):
     
     water_level = 1
+    water_rate = .01
     x = .07
-
+    
     def __init__(self):
         pass
-
+    
 class Coord(object):
     
     num_coords = 0
@@ -395,9 +523,12 @@ class Coord(object):
 
 class Env(object):
     
-    x = 0.3927
+    # x = 0.3927
+    # y = 0
+    # z = 1.2395
+    z = 0
+    x = 0
     y = 0
-    z = 1.2395
     
     # camera variables at default settings
     eyeX = (col*3)/2
