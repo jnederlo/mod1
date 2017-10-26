@@ -52,7 +52,7 @@ def draw():
         update_env()
     elif Env.mode == 2:
         draw_surface()
-        draw_water()
+        draw_water_rise()
         draw_sides()
         update_env()
     elif Env.mode == 3:
@@ -139,12 +139,16 @@ def set_terrain(coord_arr):
         x_offset += 1
     global water_terrain
     water_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
-    r = 9
+    global water_rise_terrain
+    water_rise_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
     for y in range(row/scl+1):
         for x in range(col/scl+1):
             water_terrain[x][y] = 0
     for water in water_arr:
-        make_water_circle(water.x, water.y, r, int(water.stop_z)) 
+        r = 9
+        make_water_circle(water.x, water.y, r, int(water.stop_z))
+        r = 7
+        make_water_rise_circle(water.x, water.y, r, int(water.stop_z))
 
 ##################################
 ###### MAKE_WATER_CIRCLE #########
@@ -164,6 +168,25 @@ def make_water_circle(cx, cy, r, z):
                 if z_new > water_terrain[x][y]:
                     # print "z_new = ", z_new
                     water_terrain[x][y] = z_new
+
+#######################################
+###### MAKE_WATER_RISE_CIRCLE #########
+#######################################
+def make_water_rise_circle(cx, cy, r, z):
+    for x in range(cx - r, cx + r):
+        for y in range(cy - r, cy + r):
+            z_dist = dist(cx, cy, x, y)
+            # print z_dist
+            z_dif = Water.water_max / 2
+            z_new = - 7 #change the z_dist divisor to influence and tweak
+            # z_new = (z_dist ** (1/3)) / (z + 1)
+            # print "z_dist = ", z_dist
+            if z_dist <= r:
+                # if z_dist == 0:
+                #     print "z_new = ", z_new
+                if z_new < water_terrain[x][y]:
+                    # print "z_new = ", z_new
+                    water_rise_terrain[x][y] = z_new
  
 ##################################
 ########### GRADIENT #############
@@ -373,21 +396,47 @@ def draw_surface():
         endShape()
     popMatrix()
 
+#######################################
+######### DRAW_WATER_RISE #############
+#######################################
+
+def draw_water_rise():
+    if len(coord_arr) > 10:
+        pushMatrix()
+        translate((col / -2), (row / -2), (depth / 2))
+        for y in range(row/scl):
+            beginShape(TRIANGLE_STRIP)
+            for x in range(col/scl +1):
+            # stroke(255, 255, 255)
+                if water_rise_terrain[x][y] == -20:
+                    fill(0, 100, 200, 0)
+                else:
+                    fill(0, 100, 200, 110)
+                noStroke()
+                vertex(x*scl, y*scl, (water_rise_terrain[x][y]) + Water.water_rise_rate)
+                vertex(x*scl, (y+1)*scl, (water_rise_terrain[x][y+1]) + Water.water_rise_rate)
+            endShape()
+        popMatrix()
+        draw_water()
+    else:
+        draw_water()
+
 ##################################
 ######### DRAW_WATER #############
 ##################################
 def draw_water():
-    translate((col / -2), (row / -2), (depth / 2))
+    
     #TRYING TO ADD WAVE
     # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
     # rotateX(Water.x % PI) # I added a rotate to make it appear it's coming from one side.
     # Water.x += PI/5000 # I increase the rotate slowly.
     pushMatrix()
+    translate((col / -2), (row / -2), (depth / 2))
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
         for x in range(col/scl + 1):
             noStroke()
-            fill(0, 100, 200, Water.blue_opaq)
+            fill(0, 100, 200, 110)
             # fill(color_red(x, y), color_green(x, y), color_blue(x, y))
             # fill(0, 100, 200, 200)
             vertex(x*scl, y*scl, Water.water_level)
@@ -400,19 +449,19 @@ def draw_water():
         print(Water.blue_opaq)
         endShape()
     popMatrix()
-
-
+        
+        
 ##################################
 ########### DRAW_WAVE ############
 ##################################
 def draw_wave():
-    translate((col / -2), (row / -2), (depth / 2))
     #TRYING TO ADD WAVE
     # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
     # rotateX(Water.x % PI) # I added a rotate to make it appear it's coming from one side.
     # Water.x += PI/5000 # I increase the rotate slowly.
     
     pushMatrix()
+    translate((col / -2), (row / -2), (depth / 2))
     yoff = 0
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
@@ -438,6 +487,7 @@ def draw_wave():
 def draw_water_low():    
     if len(coord_arr) > 10:
         pushMatrix()
+        translate((col / -2), (row / -2), (depth / 2))
         for y in range(10, row/scl - 10):
             beginShape(TRIANGLE_STRIP)
             for x in range(10, col/scl - 9):
@@ -476,6 +526,7 @@ def draw_water_low():
 ########## DRAW_SIDES ############
 ##################################
 def draw_sides():
+    translate((col / -2), (row / -2), (depth / 2))
     fill(0, 100, 200, Water.blue_opaq)
     pushMatrix()
     translate(0, 0, Water.water_level)
@@ -520,8 +571,12 @@ def update_env():
                 Env.transparency = 0
             if Water.water_rate >= 14.9:
                 Water.water_rate = 14.9
+            if Water.water_rise_rate > 35:
+                Water.water_rise_rate = 35
             else:
-                Water.water_rate = Water.water_rate + 0.05
+                Water.water_rate = Water.water_rate + 0.06
+                Water.water_rise_rate = Water.water_rise_rate + 0.1
+                Env.water_rise = Env.water_rise + .05
         # print Water.water_level
 
 
@@ -530,7 +585,9 @@ def reset_env():
     Env.transparency = 0
     Water.water_level = 0
     Water.water_rate = 0
+    Water.water_rise_rate = 0
     Water.wave = 1
+    Env.water_rise = 0
 
 
 
@@ -623,6 +680,7 @@ class Water(object):
     water_level = 1
     water_max = 0
     water_rate = 0
+    water_rise_rate = 0
     x = .07
     blue_opaq = 110
     
@@ -658,6 +716,7 @@ class Env(object):
     water_flush = False
     mode = 0
     transparency = 0
+    water_rise = 0
     # camera variables at default settings
     eyeX = (col*3)/2
     eyeY = (row*3)/2
