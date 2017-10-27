@@ -37,9 +37,12 @@ def draw():
     rotate_shape()
     reset()
     draw_box()
-    if Env.mode == 0 or Env.mode == 1:
-        for i in range(1000):
-            draw_rain()
+    if Env.mode == 0:
+        draw_surface()
+    elif Env.mode == 1:
+        if Drop.rain is True:
+            for i in range(1000):
+                draw_rain()
         draw_surface()
         draw_water()
         draw_water_low()
@@ -47,7 +50,7 @@ def draw():
         update_env()
     elif Env.mode == 2:
         draw_surface()
-        draw_water_rise()
+        draw_water()
         draw_sides()
         update_env()
     elif Env.mode == 3:
@@ -55,12 +58,17 @@ def draw():
         draw_wave()
         draw_sides()
         update_env()
+    elif Env.mode == 4:
+        draw_surface()
+        draw_water_rise()
+        draw_sides()
+        update_env()
 
 ##################################
 ######### TAKE_INPUT #############
 ##################################
 def take_input():
-    input = open("demo1.mod1").read()
+    input = open("demo5.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
@@ -169,7 +177,7 @@ def make_water_rise_circle(cx, cy, r, z):
         for y in range(cy - r, cy + r):
             z_dist = dist(cx, cy, x, y)
             z_dif = Water.water_max / 2
-            z_new = - 7
+            z_new = - 30
             if z_dist <= r:
                 if z_new < water_terrain[x][y]:
                     water_rise_terrain[x][y] = z_new
@@ -305,6 +313,9 @@ def pick_mode():
     if keyPressed is True:
         if key == ' ':
             Env.freeze = not Env.freeze
+        elif key == '0':
+            reset_env()
+            Env.mode = 0
         elif key == '1':
             reset_env()
             Env.mode = 1
@@ -314,8 +325,13 @@ def pick_mode():
         elif key == '3':
             reset_env()
             Env.mode = 3
+        elif key == '4':
+            reset_env()
+            Env.mode = 4
         elif key == 'f':
             Env.water_flush = not Env.water_flush
+        elif key == '.':
+            Drop.rain = not Drop.rain
             
 
 ##################################
@@ -355,19 +371,29 @@ def draw_water_rise():
     if len(coord_arr) > 10:
         pushMatrix()
         translate((col / -2), (row / -2), (depth / 2))
+        
         for y in range(row/scl):
             beginShape(TRIANGLE_STRIP)
             for x in range(col/scl +1):
-                if water_rise_terrain[x][y] == -20:
+                
+                if Water.water_stop > 0:
+                        print water_rise_terrain[x][y], Water.water_stop
+                        if water_rise_terrain[x][y] == -30:
+                            water_rise_terrain[x][y] += Water.water_stop
+                            water_rise_terrain[x][y+1] += Water.water_stop
+                if water_rise_terrain[x][y] == -30 + Water.water_stop:
                     fill(0, 100, 200, 0)
+                    vertex(x*scl, y*scl, (water_rise_terrain[x][y]) + Water.water_rise_rate)
+                    vertex(x*scl, (y+1)*scl, (water_rise_terrain[x][y+1]) + Water.water_rise_rate)
                 else:
                     fill(0, 100, 200, 110)
-                noStroke()
-                vertex(x*scl, y*scl, (water_rise_terrain[x][y]) + Water.water_rise_rate)
-                vertex(x*scl, (y+1)*scl, (water_rise_terrain[x][y+1]) + Water.water_rise_rate)
+                    noStroke()
+                    vertex(x*scl, y*scl, (water_rise_terrain[x][y]) + Water.water_rise_rate)
+                    vertex(x*scl, (y+1)*scl, (water_rise_terrain[x][y+1]) + Water.water_rise_rate)
+                    Water.water_z = (water_rise_terrain[x][y]) + Water.water_rise_rate
             endShape()
         popMatrix()
-        draw_water()
+        # draw_water()
     else:
         draw_water()
 
@@ -484,16 +510,25 @@ def update_env():
                 Water.water_level = (Water.water_level - 0.2) % 65
         else:
             Water.water_level = (Water.water_level + 0.05) % 65
-            if Water.water_level <= 0.05:
+            if Water.water_level <= 0.04:
                 Water.water_rate = 0
+                Water.water_rise_level = 0
                 Env.transparency = 0
-            if Water.water_rate >= 14.9:
-                Water.water_rate = 14.9
-            if Water.water_rise_rate > 35:
-                Water.water_rise_rate = 35
+                Water.water_level = 0
+                Water.water_rise_rate = 0
+            if Env.mode == 4:
+                if Water.water_rise_rate > 45:
+                    Water.water_rise_rate = 45
+                    # print "Water.water_stop = ", Water.water_stop
+                    # if Water.water_stop + Water.water_z:    
+                elif Water.water_rise_rate == 45:
+                    Water.water_stop += 0.05
+                else:
+                    Water.water_rise_rate = Water.water_rise_rate + 0.09
             else:
-                Water.water_rate = Water.water_rate + 0.06
-                Water.water_rise_rate = Water.water_rise_rate + 0.08
+                if Water.water_rate >= 14.9:
+                    Water.water_rate = 14.9
+                Water.water_rate = Water.water_rate + 0.05
                 Env.water_rise = Env.water_rise + .05
 
 def reset_env():
@@ -505,6 +540,9 @@ def reset_env():
     Water.wave = 1
     Env.water_rise = 0
 
+##################################
+########## DRAW_RAIN ############
+##################################
 def draw_rain():
     pushMatrix()
     translate(-col/2, 0, depth*2)
@@ -516,8 +554,9 @@ def draw_rain():
         drops[i] = Drop(x1, y1, z1, x1, y1, z1+7)
     for i in range(len(drops)):
         drops[i].show()
-
     popMatrix()
+            
+
 
 ###################################
 ######### UTILITY FUNCTIONS #######
@@ -595,6 +634,8 @@ class Water(object):
     water_max = 0
     water_rate = 0
     water_rise_rate = 0
+    water_stop = 0
+    water_z = 0
     x = .07
     blue_opaq = 110
     
@@ -618,6 +659,9 @@ class Coord(object):
         self.z = int(tempZ)
         
 class Drop(object):
+    
+    rain = True
+    
     def __init__(self, x1, y1, z1, x2, y2, z2):
         self.x1 = x1
         self.y1 = y1
@@ -629,7 +673,6 @@ class Drop(object):
     def show(self):
         stroke(0, 100, 200)
         line(self.x1, self.y1, self.z1, self.x2, self.y2, self.z2)
-
 
 class Env(object):
     
