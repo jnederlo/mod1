@@ -67,7 +67,7 @@ def draw():
 ######### TAKE_INPUT #############
 ##################################
 def take_input():
-    input = open("demo5.mod1").read()
+    input = open("demo1.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
@@ -149,6 +149,9 @@ def set_terrain(coord_arr):
         make_water_circle(water.x, water.y, r, int(water.stop_z))
         r = 7
         make_water_rise_circle(water.x, water.y, r, int(water.stop_z))
+    
+    global water_wave_terrain
+    water_wave_terrain = [[0 for x in range(col/scl + 1)] for y in range(row/scl + 1)]
 
 ##################################
 ###### MAKE_WATER_CIRCLE #########
@@ -455,31 +458,36 @@ def draw_water():
 ########### DRAW_WAVE ############
 ##################################
 def draw_wave():
-    #TRYING TO ADD WAVE
-    # translate((col / -2), (row / -2), (depth / -2)) # I changed the depth to divide by -2 instead of 2
-    # rotateX(Water.x % PI) # I added a rotate to make it appear it's coming from one side.
-    # Water.x += PI/5000 # I increase the rotate slowly.
-    
     pushMatrix()
     translate((col / -2), (row / -2), (depth / 2))
-    yoff = 0
+    Env.flying -= 0.02
+    yoff = Env.flying
+    for y in range(row/scl):
+        xoff = 0 
+        for x in range(col/scl + 1):
+            water_wave_terrain[x][y] = map(noise(xoff, yoff), 0, 1, 0, 50)
+            xoff = xoff + 0.05
+        yoff = yoff + 0.05
+    
     for y in range(row/scl):
         beginShape(TRIANGLE_STRIP)
-        xoff = 0
         for x in range(col/scl + 1):
+            if len(coord_arr) > 12:
+                if (x <= col/scl - 15 and x >= 15) and (y <=row/scl - 15 and y >= 10):
+                    fill(0, 100, 200, 0)
+                else:
+                    fill(0, 100, 200, 100)
+            else:
+                fill(0, 100, 200, 100)
             noStroke()
-            fill(0, 100, 200, 100)
-            # if x == wave:
-                # map(noise(y_offset, x_offset), 0, 1, 0, 10)
-            vertex(x*scl, y*scl, Water.water_level + map(noise(xoff), 0, 1, 0, 5))
-            vertex(x*scl, (y+1)*scl, Water.water_level + map(noise(yoff), 0, 1, 0, 5))
-            # else:
-            #     vertex(x*scl, y*scl, Water.water_level)
-            #     vertex(x*scl, (y+1)*scl, Water.water_level)
-            xoff += 0.05
+            vertex(x*scl, y*scl, -8 + water_wave_terrain[x][y]) # map(noise(xoff), 0, 1, 0, 5))
+            vertex(x*scl, (y+1)*scl, -8 + water_wave_terrain[x][y+1])# map(noise(yoff), 0, 1, 0, 5))
         endShape()
-        yoff += 0.01
+    Water.water_level = 0
+    Water.water_rate = 0
+    Water.water_rise_rate = 0
     popMatrix()
+    
 
 ##################################
 ######## DRAW_WATER_LOW ##########
@@ -575,7 +583,7 @@ def update_env():
                 Water.water_rise_rate = 35
             else:
                 Water.water_rate = Water.water_rate + 0.06
-                Water.water_rise_rate = Water.water_rise_rate + 0.1
+                Water.water_rise_rate = Water.water_rise_rate + 0.08
                 Env.water_rise = Env.water_rise + .05
         # print Water.water_level
 
@@ -717,6 +725,7 @@ class Env(object):
     mode = 0
     transparency = 0
     water_rise = 0
+    flying = 0
     # camera variables at default settings
     eyeX = (col*3)/2
     eyeY = (row*3)/2
