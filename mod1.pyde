@@ -45,6 +45,8 @@ def draw():
     reset()
     draw_box()
     if Env.mode == 0 or Env.mode == 1:
+        for i in range(1000):
+            draw_rain()
         draw_surface()
         draw_water()
         draw_water_low()
@@ -591,9 +593,19 @@ def reset_env():
 
 
 
+def draw_rain():
+    pushMatrix()
+    translate(-col/2, 0, depth*2)
+    drops = [0 for x in range(1)]
+    x1 = random(0, col)
+    y1 = random(-row/2, row/2)
+    z1 = random(-60, 60)
+    for i in range(len(drops)):
+        drops[i] = Drop(x1, y1, z1, x1, y1, z1+7)
+    for i in range(len(drops)):
+        drops[i].show()
 
-
-
+    popMatrix()
 
 ###################################
 ######### UTILITY FUNCTIONS #######
@@ -703,6 +715,23 @@ class Coord(object):
         self.y = int(tempY)
         self.z = int(tempZ)
         
+class Drop(object):
+    def __init__(self, x1, y1, z1, x2, y2, z2):
+        self.x1 = x1
+        self.y1 = y1
+        self.z1 = z1
+        self.x2 = x2
+        self.y2 = y2
+        self.z2 = z2
+        
+    # def fall(self):
+    #     self.y1 += self.yspeed
+    
+    def show(self):
+        stroke(0, 100, 200)
+        line(self.x1, self.y1, self.z1, self.x2, self.y2, self.z2)
+        
+
 
 class Env(object):
     
