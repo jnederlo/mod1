@@ -68,7 +68,7 @@ def draw():
 ######### TAKE_INPUT #############
 ##################################
 def take_input():
-    input = open("demo5.mod1").read()
+    input = open("demo2.mod1").read()
     input = input.replace('\n', ' ')
     input = input.translate(None, '()')
     input = input.split(' ')
@@ -368,27 +368,26 @@ def draw_surface():
 #######################################
 
 def draw_water_rise():
-    if len(coord_arr) > 10:
+    if len(coord_arr) > 12:
         pushMatrix()
         translate((col / -2), (row / -2), (depth / 2))
         for y in range(row/scl):
             beginShape(TRIANGLE_STRIP)
             for x in range(col/scl +1):
-                if water_rise_terrain[x][y] == -30 and Water.water_rise_rate == 45: ####HHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRREEEEEEE
+                if water_rise_terrain[x][y] < water_rise_terrain[1][1]:
                     fill(0, 100, 200, 110)
-                    print "water_rise", water_rise_terrain[x][y] + Water.water_rise_rate + Water.water_stop
                     vertex(x*scl, y*scl, water_rise_terrain[x][y] + Water.water_rise_rate + Water.water_stop)
-                    vertex(x*scl, (y+1)*scl, water_rise_terrain[x][y+1] + Water.water_rise_rate + Water.water_stop)
-                    Water.water_stop += .0005
-                    Water.time_to_stop = water_rise_terrain[x][y] + Water.water_rise_rate + Water.water_stop
-                    if (Water.time_to_stop) >= 25: ##HHHHHHHHHHHHHHHHHHHHHHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERRRRRRRRRRRRREE
-                        Water.water_rise_rate += .01
                 else:
                     fill(0, 100, 200, 110)
                     noStroke()
                     vertex(x*scl, y*scl, (water_rise_terrain[x][y]) + Water.water_rise_rate)
+                if water_rise_terrain[x][y+1] < water_rise_terrain[1][1]:
+                    fill(0, 100, 200, 110)          
+                    vertex(x*scl, (y+1)*scl, water_rise_terrain[x][y+1] + Water.water_rise_rate + Water.water_stop)
+                else:
+                    fill(0, 100, 200, 110)
+                    noStroke()
                     vertex(x*scl, (y+1)*scl, (water_rise_terrain[x][y+1]) + Water.water_rise_rate)
-                    Water.water_z = (water_rise_terrain[x][y]) + Water.water_rise_rate
             endShape()
         popMatrix()
         # draw_water()
@@ -412,7 +411,6 @@ def draw_water():
             Water.blue_opaq = 160
         else:
             Water.blue_opaq += .005
-        print(Water.blue_opaq)
         endShape()
     popMatrix()
         
@@ -456,7 +454,7 @@ def draw_wave():
 ######## DRAW_WATER_LOW ##########
 ##################################
 def draw_water_low():    
-    if len(coord_arr) > 10:
+    if len(coord_arr) > 13:
         pushMatrix()
         translate((col / -2), (row / -2), (depth / 2))
         for y in range(10, row/scl - 10):
@@ -507,22 +505,27 @@ def update_env():
             else:
                 Water.water_level = (Water.water_level - 0.2) % 65
         else:
-            Water.water_level = (Water.water_level + 0.05) % 65
-            if Water.water_level <= 0.04:
+            if Env.mode == 4:
+                if Water.water_rise_rate <= 43 or Water.water_stop > 30:
+                    Water.water_level = (Water.water_level + 0.05) % 65
+                    if Water.water_level <= 0.04:
+                        Water.water_stop = 0
+            else:
+                Water.water_level = (Water.water_level + 0.05) % 65
+            if Water.water_level <= 0.04 and not Env.mode == 4:
                 Water.water_rate = 0
                 Water.water_rise_level = 0
                 Env.transparency = 0
                 Water.water_level = 0
                 Water.water_rise_rate = 0
+                Water.water_stop = 0
             if Env.mode == 4:
-                if Water.water_rise_rate == 45: ##HHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERE
-                    if Water.time_to_stop == 25: ##HHEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEERE
-                        Water.water_rise_rate = Water.water_rise_rate + 0.09 #HHHHHHHHHEEEEEEEEEEEEEEEEEEEEERRREE
-                    else:
-                        Water.water_rise_rate = 45 ##HHHEEEERRREEERRREEEERRREEE
-                    # print "water rise rate = ", Water.water_rise_rate
+                if Water.water_rise_rate >= 43 and Water.water_stop < 30:
+                    Water.water_stop += 0.05
                 else:
-                    Water.water_rise_rate = Water.water_rise_rate + 0.09
+                    Water.water_rise_rate = (Water.water_rise_rate + 0.05) % 65
+                    # if Water.water_rise_rate <= 0.05:
+                    #     reset_env()
             else:
                 if Water.water_rate >= 14.9:
                     Water.water_rate = 14.9
@@ -536,6 +539,7 @@ def reset_env():
     Water.water_rate = 0
     Water.water_rise_rate = 0
     Water.wave = 1
+    Water.water_stop = 0
     Env.water_rise = 0
 
 ##################################
